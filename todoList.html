@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>使用Vue来制作todoList列表</title>
+	<meta charset="utf-8">
+	<script src="https://unpkg.com/vue/dist/vue.js"></script>
+	<link rel="stylesheet" type="text/css" href="todoList.css">
+</head>
+<body>
+	<div id="app" class="main">
+		<h2>小目标列表</h2>
+		<div class="list">
+			<h3>添加小目标</h3>
+			<input type="text" placeholder="输入小目标后，按回车确认" class="text-keyword" v-on:keyup.13="addList" v-model="addText">
+			<!-- noend表示没有完成的有多少 -->
+			<p>
+				共有{{ proList.length }}个目标，{{ noend == 0? " &nbsp;&nbsp;&nbsp;全部完成了" : "已完成" + (proList.length - noend) + "， 还有" + noend +"条未完成" }}
+			</p>
+			<p>
+				<input type="radio" name="chooseType" checked="true" v-on:click="chooseList(1)">
+				<label>所有目标</label>
+				<input type="radio" name="chooseType" v-on:click="chooseList(2)">
+				<label>已完成目标</label>
+				<input type="radio" name="chooseType" v-on:click="chooseList(3)">
+				<label>未完成目标</label>
+			</p>
+		</div>
+		<ul>
+			<li v-for="(list,index) in newList" class="li1" :class="{'eidting':curIndex===index}">
+				<div>
+					<span class="status-span" v-on:click="changeType(index)" :class="{'status-end':list.status}">	
+					</span>
+					<span v-on:dblclick="curIndex=index">{{ list.name }}</span>
+					<span class="close" v-on:click="delectList(list)">X</span>
+				</div>
+				<input type="text" class="text2" v-model="list.name" v-on:keyup.esc="cancelEdit(list)" @blur="edited" @focus="editBefore(list.name)" @keyup.enter="edited" v-focus>
+			</li>
+		</ul>
+	</div>
+	<script type="text/javascript">
+	new Vue({
+		el:"#app",
+		data:{
+			addText:'',
+			proList:[
+				{name:"HTML5", status: false},
+				{name:"CSS3", status: false},
+				{name:"VUE", status: false},
+				{name:"REACT", status: false}
+			],
+			newList:[],
+			curIndex:'',
+			beforeEditText:'',
+			curType:0
+		},
+		//计算有多少目标完成与未完成
+		computed:{
+			noend: function(){
+				return this.proList.filter(function(item){
+					return !item.status
+				}).length;
+			}
+		},
+		methods:{
+			//添加选项，且默认添加选项的status是false
+			addList(){
+				this.proList.push({
+					name:this.addText,
+					status:false
+				});
+				//添加完目标后，使其恢复为原有的样式
+				this.addText='';
+			},
+			chooseList(type){
+				this.curType = type;
+				switch(type)
+				{
+					case 1:this.newList = this.proList;
+						break;	
+					case 2:this.newList = this.proList.filter(function(item){
+						return item.status
+					});
+						break;
+					case 3:this.newList = this.proList.filter(function(item){
+						return !item.status
+					});
+						break;
+				}
+			},
+			//改变单条数据的状态
+			changeType(index){
+				this.newList[index].status = !this.newList[index].status;
+				//更新数据
+				this.chooseList(this.curType);
+			},
+			delectList(list){
+				var index = this.proList.indexOf(list);
+				this.proList.splice(index,1);
+				//赋值，更新数据
+				this.chooseList(this.curType);
+			},
+			//修改前
+			editBefore(name){
+				this.beforeEditText = name;
+			},
+			//修改后
+			edited(){
+				this.curIndex = '';
+			},
+			//取消修改后
+			cancelEdit(val){
+				val.name = this.beforeEditText;
+				this.curIndex = '';
+			}
+		},
+		mounted(){
+			//将ProList赋值给newList，两个共同调用一个对象，且开始时显示默认的样式
+			this.newList = this.proList;
+		},
+		directives:{
+			"focus":{
+				update(el){
+					el.focus();
+				}
+			}
+		}
+	});
+	</script>
+</body>
+</html>
